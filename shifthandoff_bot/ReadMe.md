@@ -1,0 +1,3 @@
+-- This bot is dedicated for doing only Noida Shift-handoff.
+-- Hack the code to do shift-handoff for any other channel.
+-- Copys' content from one channel and paste it to other channel 

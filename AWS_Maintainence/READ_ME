@@ -1,0 +1,4 @@
+This is a Ansible role along with playbook & inventory file. This needs to be run after create_AMI_n_spin_instance.py incase the instance is not having some of the few settings. 
+CAUTION: Before running this ensure the default/main.yml is having the correct variable & ensure the ssh key are in place 
+
+SYNTAX: ansible-playbook -vi host maintainers.yml 

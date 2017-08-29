@@ -1,0 +1,13 @@
+---
+  - name: Make the tomcat folder in /mnt
+    file: path=/mnt/tomcat7 state=directory owner=tomcat7 group=tomcat7
+
+  - name: Replace index.html
+    template:
+        src=index.html.j2
+        dest=/var/lib/tomcat7/webapps/ROOT/index.html
+
+  - name: Restart tomcat
+    service:
+         name=tomcat7
+         state=restarted

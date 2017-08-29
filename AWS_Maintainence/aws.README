@@ -1,0 +1,6 @@
+- Before Running the file , you need to place the slack token & your aws credentials in the code.
+- This is just a RnD code which can be inhanced later to do more highlevel devOps stuff.
+
+- Usage: python aws.py {start|stop|reboot} INSTACNE_ID REGION
+
+nishant.singh@safenet-inc
