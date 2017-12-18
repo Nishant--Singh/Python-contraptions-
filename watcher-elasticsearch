@@ -1,0 +1,116 @@
+## Watcher elasticsearch
+POST _xpack/watcher/watch/agent-collector-memory/_execute
+
+
+POST _xpack/watcher/watch/agent-collector-memory/_deactivate
+
+
+
+PUT _xpack/watcher/watch/agent-collector-memory
+{
+  "trigger": {
+    "schedule": {
+      "interval": "5m"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "<metricbeat-{now/d}>"
+        ],
+        "types": [],
+        "body": {
+          "query": {
+            "bool": {
+              "must": [
+                {
+                  "match": {
+                    "docker.container.labels.name": "mtcagent-collector"
+                  }
+                },
+                {
+                  "match": {
+                    "metricset.name": "memory"
+                  }
+                }
+              ],
+              "filter": [
+                {
+                  "range": {
+                    "@timestamp": {
+                      "gte": "now-5m",
+                      "lt": "now"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "aggs": {
+            "by_collector": {
+              "terms": {
+                "field": "docker.container.labels.agent"
+              },
+              "aggs": {
+                "memory_used_percent": {
+                  "avg": {
+                    "field": "docker.memory.usage.pct"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+    "condition": {
+    "script": {
+      "lang": "painless",
+      "inline": """
+          for (agent in ctx.payload.aggregations.by_collector.buckets)
+            if (((agent.memory_used_percent.value)*100)>=10)
+            {
+              return true;
+            }
+            return false;
+      """
+    }
+  },
+  "actions": {
+    "notify-slack":{
+      "transform": {
+        "script": {
+          "inline": """
+          def detected = new ArrayList();
+          for (agent in ctx.payload.aggregations.by_collector.buckets)
+          {
+            if (((agent.memory_used_percent.value)*100)>=10) {
+              def tdet = new HashMap();
+              tdet.put("agent_name",agent.key);
+              tdet.put("usage_percent",(agent.memory_used_percent.value)*100);
+              detected.add(tdet)
+            }
+          }
+          return detected;
+          """,
+          "lang": "painless"
+        }
+      },
+      "slack": {
+        "message": {
+          "from": "Agent-Docker-Memory usage",
+          "to": ["@nishant"],
+          "text": "Docker memory Usage Hit > 90% for Following Agents: {{#ctx.payload._value}}{{agent_name}} Value {{usage_percent}}, {{/ctx.payload._value}} "
+        }
+      }
+        }
+      }
+    }
+  
+
+
+
+
